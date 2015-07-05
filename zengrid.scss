@@ -1,167 +1,175 @@
-//
-// zengrid.scss
-// v1.0
-//
+// Zengrid v1.0
 
-// TODO:
-// Revisar los @extend dentro de los @mediaqueries
-
-// MINI-DOC:
-//
-// <tag class="container"></tag> Contenedor principal
-//
-// <tag class="row"></tag> Fila donde se alojan las columnas
-//
-// <tag class="w2"></tag> Una columna de ancho 2
-// <tag class="center(w4)"></tag> Una columna de ancho 4 centrada
-// <tag class="w2 w8(small)"></tag> Una columna de ancho 2 y ancho 8 en el breakpoint 'small'
-// <tag class="w6$"></tag> Una columna de ancho 6 que "termina" la fila
-// <tag class="50%"></tag> Una columna de 50% de ancho
-
-// Mediaqueries
-@import "media-queries";
+$DEBUG: False; // on/off visual debugs
 
 // Vars
-
-    // Setup
     $setup: (
-        foo: (),
-        bars: (),
+        // Grid semantic config
+        keywords: (
+            columnUnit_char: "w",
+            centerSuffix_char: "C",
+            offset_char: "offset",
+            push_char: "push",
+            pull_char: "pull",
+            separator_char: "-"
+        ),
+        // Breakpoints
         breakpoints: (
+            // Default breakpoint, mobile first :)
             small: (
-                name: "small",
-                cols: 6,
-                viewport: 900px,
+                name: "",
+                cols: 16,
+                viewport: 0px,
                 container: 640px,
-                gutter: 4px
+                gutter: 8px
             ),
-
             med: (
-                name: "medium",
-                cols: 8,
-                viewport: 1300px,
+                name: "m",
+                cols: 16,
+                viewport: 750px,
                 container: 750px,
-                gutter: 4px
+                gutter: 8px
             ),
-
             large: (
-                name: "large",
-                cols: 8,
+                name: "l",
+                cols: 16,
                 viewport: 1600px,
                 container: 1200px,
-                gutter: 30px
+                gutter: 8px
             ),
-
             xlarge: (
-                name: "xlarge",
-                cols: 8,
-                viewport: 2560px,
+                name: "xl",
+                cols: 16,
+                viewport: 2500px,
                 container: 1500px,
-                gutter: 40px
+                gutter: 8px
             )
         )
     );
 
+// Helper Classes
+    .center {
+        text-align: center;
+    }
 
-// Classes
+    .childCenter > * {
+        text-align: center;
+    }
 
-    // Debug purpose (start)
-    .grid { margin: 0 auto; overflow: hidden; position: fixed; left: 0; right: 0; top: 0; bottom: 0; }
-    .grid .guide { float: left; height: 100%; bottom: 0; background-clip: content-box; background-color: yellow; opacity: 0.2 }
-    .grid .guide:first-child  { padding-left: 0; }
-    // Debug purpose (end)
-    .container { margin: 0 auto; overflow: hidden; }
-    // Row
-    .row  { width: 100%; clear: both; }
-    .row > *  { background-color: rgba(19, 90, 190, 0.8); background-clip: content-box; float: left; /* Debug */ min-height: 40px; margin-bottom: 10px; /* Debug */ }
-    .row div:first-child  { padding-left: 0; }
+// Grid
+    * {
+        box-sizing: border-box;
+    }
 
-    $numberOfBreakPoints: length(map-get($setup, breakpoints));
+    body {
+        margin: 0;
+    }
 
-    @for $BP from 1 to $numberOfBreakPoints + 1 {
+    .row:before,
+    .row:after {
+        content:"";
+        display: table ;
+        clear:both;
+        posiiton: relative;
+    }
 
+    // Breakpoints
+    $columnUnit_char: map-get(map-get($setup, keywords), columnUnit_char);
+    $centerSuffix_char: map-get(map-get($setup, keywords), centerSuffix_char);
+    $offset_char: map-get(map-get($setup, keywords), offset_char);
+    $push_char: map-get(map-get($setup, keywords), push_char);
+    $pull_char: map-get(map-get($setup, keywords), pull_char);
+    $separator_char: map-get(map-get($setup, keywords), pull_char);
+
+    @mixin makeGrid($name, $cols, $viewport, $container, $gutter) {
+        @media (min-width: $viewport) {
+            @for $i from 1 to $cols + 1 {
+                // Column and column with terminator
+                .#{$columnUnit_char}#{$i}#{$name}, .w#{$i}#{$name}\$ {
+                    float: left;
+                    min-height: 1px;
+                    padding: ($gutter / 2);
+                    position: relative;
+                    width: (100% / $cols) * $i;
+                    @if $DEBUG == True {
+                        min-height: 50px;
+                        border-radius: 8px;
+                        background-color: rgba(100,200,90, 0.5);
+                        background-clip: content-box;
+                    }
+                }
+                // Column behind a column terminator
+                .#{$columnUnit_char}#{$i}#{$name}\$ + * {
+                    clear: left;
+                }
+                // Center column
+                .#{$columnUnit_char}#{$i}#{$name}#{$centerSuffix_char}, .#{$columnUnit_char}#{$i}#{$name}#{$centerSuffix_char}\$ {
+                    @extend .#{$columnUnit_char}#{$i}#{$name};
+                    margin-left: (($cols - $i) / 2) * (100% / $cols);
+                    @if $DEBUG == True {
+                        background-color: rgba(255,20,100,0.5);
+                    }
+                }
+                // Offset (move to the right) colum
+                .#{$offset_char}#{$i - 1}#{$name} {
+                    margin-left: (100% / $cols) * ($i - 1);
+                    @if $DEBUG == True {
+                        background-color: rgba(10,20,100,0.5);
+                    }
+                }
+                // Push column (jump to the right)
+                .#{$push_char}#{$i - 1}#{$name} {
+                    left: (100% / $cols) * ($i - 1);
+                    @if $DEBUG == True {
+                        background-color: rgba(125,33,220,0.5);
+                    }
+                }
+                // Pull column (jump to the left)
+                .#{$pull_char}#{$i - 1}#{$name} {
+                    left: -((100% / $cols) * ($i - 1));
+                    @if $DEBUG == True {
+                        background-color: rgba(95,220,10,0.5);
+                    }
+                }
+            }
+            // Percentage (n%)
+            @for $i from 1 to 21 {
+                $perc: $i * 5;
+
+                // Column percentage
+                .\(#{$perc}\%\)#{$name}, .\(#{$perc}\%\)#{$name}\$ {
+                    @extend .#{$columnUnit_char}#{1}#{$name};
+                    width: #{$perc}%;
+                }
+                // Column percentage behind terminator
+                .\(#{$perc}\%\)#{$name}\$ + * {
+                    clear: left;
+                }
+                // Center
+                .\(#{$perc}\%\)#{$name}#{$centerSuffix_char}, .\(#{$perc}\%\)#{$name}#{$centerSuffix_char}\$ {
+                    @extend .\(#{$perc}\%\)#{$name};
+                    margin-left: (100% - $perc) / 2;
+                }
+                // Center
+                .\(#{$perc}\%\)#{$name}#{$centerSuffix_char}\$ + * {
+                    clear: left;
+                }
+            }
+        }
+    }
+
+    // Loop for each breakpoints in $setup map
+    @for $BP from 1 to length(map-get($setup, breakpoints)) + 1 {
+        // Breakpoints $map
         $breakPoints: nth(nth(map-get($setup, breakpoints), $BP), 2);
 
+        // Breakpoint: Propiedades
         $BPName: map-get($breakPoints, name);
         $BPCols: map-get($breakPoints, cols);
         $BPContainer: map-get($breakPoints, container);
         $BPGutter: map-get($breakPoints, gutter);
-        $BPMinViewport: 0px;
-        $BPMaxViewport: map-get($breakPoints, viewport);
+        $BPViewport: map-get($breakPoints, viewport);
 
-        @if $BP > 1 {
-            $BPMinViewport: map-get(nth(nth(map-get($setup, breakpoints), $BP - 1), 2), viewport);
-        }
-
-        @include screen($BPMinViewport + 1, $BPMaxViewport) {
-            $colWidth: ((($BPContainer - ($BPGutter * ($BPCols - 1))) / $BPContainer) * (100% / $BPCols));
-            $gutterPrc: (($BPGutter / $BPContainer) * 100);
-            $colWidthAndGutter: ((($BPContainer - ($BPGutter * ($BPCols - 1))) / $BPContainer) * (100% / $BPCols));
-
-            // Container (and fake grid) Classes
-            // Debug purpose (start)
-            .grid {
-                width: $BPContainer;
-            }
-
-            .grid .guide {
-                width: $colWidthAndGutter;
-                padding-left: $BPGutter;
-            }
-            // Debug purpose (end)
-
-            .container {
-                width: $BPContainer;
-            }
-
-            // Grid classes
-            @for $COLS from 1 to $BPCols + 1 {
-
-                // Cols (with breakpoints)
-                .w#{$COLS}, .w#{$COLS}\(#{$BPName}\), .w#{$COLS}\$, .w#{$COLS}\(#{$BPName}\)\$ {
-                    width: ($colWidth * $COLS) + ($gutterPrc * ($COLS - 1));
-                    padding-left: $BPGutter;
-                }
-
-                // Push cols (with breakpoints)
-                .push-#{$COLS}, .push-#{$COLS}\(#{$BPName}\)  {
-                    margin-left: ($colWidth * $COLS) + ($gutterPrc * ($COLS));
-                }
-
-                // Pull cols (with breakpoints)
-                .pull-#{$COLS}, .pull-#{$COLS}\(#{$BPName}\)  {
-                    margin-left: -(($colWidth * $COLS) + ($gutterPrc * ($COLS)));
-                }
-
-                // Center cols (pair)
-                .center\(w#{$COLS}\) {
-                    @extend .w#{$COLS};
-                    @extend .push-#{ceil(($BPCols - $COLS) / 2)};
-                }
-
-                // Center cols with breakpoints
-                .center\(w#{$COLS}\)\(#{$BPName}\) {
-                    @extend .w#{$COLS}\(#{$BPName}\);
-                    @extend .push-#{(ceil(($BPCols - $COLS) / 2))}\(#{$BPName}\);
-                }
-
-                // Center with terminator
-                .center\(w#{$COLS}\)\$ {
-                    @extend .center\(w#{$COLS}\);
-                    float: none;
-                }
-
-                // Center with breakpoint with terminator
-                .center\(w#{$COLS}\)\(#{$BPName}\)\$ {
-                    @extend .center\(w#{$COLS}\)\(#{$BPName}\);
-                    float: none;
-                }
-
-                // After terminator
-                .w#{$COLS}\$ + *, .w#{$COLS}\(#{$BPName}\)\$ + * {
-                    clear: left;
-                    padding-left: 0;
-                }
-            }
-        }
+        // Make css grid
+        @include makeGrid($BPName, $BPCols, $BPViewport, $BPContainer, $BPGutter);
     }
