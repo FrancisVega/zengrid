@@ -1,6 +1,7 @@
 // Zengrid v1.0
 
-$DEBUG: False; // on/off visual debugs
+// Visual help (True|False)
+$DEBUG: True;
 
 // Vars
     $setup: (
@@ -52,17 +53,9 @@ $DEBUG: False; // on/off visual debugs
         text-align: center;
     }
 
-    .childCenter > * {
-        text-align: center;
-    }
-
 // Grid
     * {
         box-sizing: border-box;
-    }
-
-    body {
-        margin: 0;
     }
 
     .row:before,
